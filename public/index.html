@@ -1,93 +1,162 @@
 <!doctype html>
 <html lang="id">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>REST API - Downloader</title>
-		<link
-			href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-			rel="stylesheet" />
-		<script
-			src="https://kit.fontawesome.com/a076d05399.js"
-			crossorigin="anonymous"></script>
-	</head>
-	<body>
-		<div class="container mt-5">
-			<h2 class="mb-4">
-				<i class="fas fa-cloud-download-alt"></i> API Downloader
-			</h2>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>REST API - Downloader</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet" />
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <style>
+        body {
+            background-color: #1e1e30; /* Dark purple */
+            color: #fff;
+        }
+        .container {
+            background-color: #151525; /* Slightly lighter purple */
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(128, 0, 128, 0.5); /* Purple glow */
+        }
+        h2 {
+            color: #e0b0ff; /* Light purple */
+            text-shadow: 0 0 10px #e0b0ff;
+        }
+        .accordion-button {
+            background-color: #151525; /* Slightly lighter purple */
+            color: #e0b0ff; /* Light purple */
+            border: none;
+            text-shadow: 0 0 10px #e0b0ff;
+        }
+        .accordion-button:not(.collapsed) {
+            background-color: #151525; /* Slightly lighter purple */
+            color: #e0b0ff; /* Light purple */
+            box-shadow: 0 0 10px #e0b0ff; /* Purple glow */
+        }
+        .accordion-body {
+            background-color: #151525; /* Slightly lighter purple */
+            color: #fff;
+        }
+        .btn-success {
+            background-color: #a74ac7; /* Purple-ish */
+            border: none;
+            box-shadow: 0 0 10px #a74ac7; /* Purple glow */
+        }
+        .btn-success:hover {
+            background-color: #9437b4; /* Darker purple */
+        }
+        #api-details {
+            animation: slideIn 0.5s;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">
+            <i class="fas fa-cloud-download-alt"></i> API Downloader
+        </h2>
 
-			<!-- Dropdown untuk kategori -->
-			<div class="mb-3">
-				<button
-					class="btn btn-primary dropdown-toggle"
-					type="button"
-					data-bs-toggle="dropdown"
-					aria-expanded="false">
-					Downloader
-				</button>
-				<ul class="dropdown-menu">
-					<li>
-						<a
-							class="dropdown-item"
-							onclick="showDetails('instagram')"
-							>Instagram</a
-						>
-					</li>
-					<li>
-						<a class="dropdown-item" onclick="showDetails('tiktok')"
-							>TikTok</a
-						>
-					</li>
-					<li>
-						<a
-							class="dropdown-item"
-							onclick="showDetails('facebook')"
-							>Facebook</a
-						>
-					</li>
-					<li>
-						<a class="dropdown-item" onclick="showDetails('capcut')"
-							>CapCut</a
-						>
-					</li>
-					<li>
-						<a
-							class="dropdown-item"
-							onclick="showDetails('spotify')"
-							>Spotify</a
-						>
-					</li>
-					<li>
-						<a
-							class="dropdown-item"
-							onclick="showDetails('youtube')"
-							>Youtube</a
-						>
-					</li>
-				</ul>
-			</div>
+        <!-- Accordion untuk kategori -->
+        <div class="accordion" id="downloaderAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingInstagram">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInstagram" aria-expanded="true" aria-controls="collapseInstagram">
+                        Instagram
+                    </button>
+                </h2>
+                <div id="collapseInstagram" class="accordion-collapse collapse" aria-labelledby="headingInstagram" data-bs-parent="#downloaderAccordion">
+                    <div class="accordion-body">
+                        <h4>Instagram Downloader</h4>
+                        <p>Download videos from Instagram.</p>
+                        <code>/api/download/instagram</code>
+                        <input type="text" id="instagram-url" class="form-control mb-2" placeholder="Masukkan URL" />
+                        <button class="btn btn-success" onclick="tryApi('instagram')">Try</button>
+                        <h5 class="mt-3">Response:</h5>
+                        <pre id="instagram-response" class="border p-3 bg-light text-dark"></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingTiktok">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTiktok" aria-expanded="false" aria-controls="collapseTiktok">
+                        TikTok
+                    </button>
+                </h2>
+                <div id="collapseTiktok" class="accordion-collapse collapse" aria-labelledby="headingTiktok" data-bs-parent="#downloaderAccordion">
+                    <div class="accordion-body">
+                        <h4>TikTok Downloader</h4>
+                        <p>Download videos from TikTok.</p>
+                        <code>/api/download/tiktok</code>
+                        <input type="text" id="tiktok-url" class="form-control mb-2" placeholder="Masukkan URL" />
+                        <button class="btn btn-success" onclick="tryApi('tiktok')">Try</button>
+                        <h5 class="mt-3">Response:</h5>
+                        <pre id="tiktok-response" class="border p-3 bg-light text-dark"></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingCapcut">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCapcut" aria-expanded="false" aria-controls="collapseCapcut">
+                        Capcut
+                    </button>
+                </h2>
+                <div id="collapseCapcut" class="accordion-collapse collapse" aria-labelledby="headingCapcut" data-bs-parent="#downloaderAccordion">
+                    <div class="accordion-body">
+                        <h4>Capcut Downloader</h4>
+                        <p>Download videos from Capcut.</p>
+                        <code>/api/download/capcut</code>
+                        <input type="text" id="capcut-url" class="form-control mb-2" placeholder="Masukkan URL" />
+                        <button class="btn btn-success" onclick="tryApi('capcut')">Try</button>
+                        <h5 class="mt-3">Response:</h5>
+                        <pre id="capcut-response" class="border p-3 bg-light text-dark"></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingSpotify">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSpotify" aria-expanded="false" aria-controls="collapseSpotify">
+                        Spotify
+                    </button>
+                </h2>
+                <div id="collapseSpotify" class="accordion-collapse collapse" aria-labelledby="headingSpotify" data-bs-parent="#downloaderAccordion">
+                    <div class="accordion-body">
+                        <h4>Spotify Downloader</h4>
+                        <p>Download audios from Spotify.</p>
+                        <code>/api/download/spotify</code>
+                        <input type="text" id="spotify-url" class="form-control mb-2" placeholder="Masukkan URL" />
+                        <button class="btn btn-success" onclick="tryApi('spotify')">Try</button>
+                        <h5 class="mt-3">Response:</h5>
+                        <pre id="spotify-response" class="border p-3 bg-light text-dark"></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingYoutube">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseYoutube" aria-expanded="false" aria-controls="collapseYoutube">
+                        YouTube
+                    </button>
+                </h2>
+                <div id="collapseYoutube" class="accordion-collapse collapse" aria-labelledby="headingYoutube" data-bs-parent="#downloaderAccordion">
+                    <div class="accordion-body">
+                        <h4>YouTube Downloader</h4>
+                        <p>Download videos from YouTube.</p>
+                        <code>/api/download/youtube</code>
+                        <input type="text" id="youtube-url" class="form-control mb-2" placeholder="Masukkan URL" />
+                        <button class="btn btn-success" onclick="tryApi('youtube')">Try</button>
+                        <h5 class="mt-3">Response:</h5>
+                        <pre id="youtube-response" class="border p-3 bg-light text-dark"></pre>
+                    </div>
+                </div>
+            </div>
+            <!-- Add more accordion items for other categories as needed -->
+        </div>
+    </div>
 
-			<!-- Detail Endpoint -->
-			<div id="api-details" style="display: none">
-				<h4 id="api-title"></h4>
-				<p id="api-description"></p>
-				<code id="api-endpoint" class="d-block mb-2"></code>
-				<input
-					type="text"
-					id="api-input"
-					class="form-control mb-2"
-					placeholder="Masukkan URL" />
-				<button class="btn btn-success" onclick="tryApi()">
-					Try
-				</button>
-
-				<h5 class="mt-3">Response:</h5>
-				<pre id="api-response" class="border p-3 bg-light"></pre>
-			</div>
-		</div>
-
-		<script src="script.js"></script>
-		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-	</body>
+    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 </html>

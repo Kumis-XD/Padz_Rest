@@ -69,6 +69,21 @@ app.get("/api/download/instagram", async (req, res) => {
     }
 });
 
+app.get("/api/download/snapsave", async (req, res) => {
+    const { url } = req.query;
+    if (!url)
+        return res
+            .status(400)
+            .json({ error: "Silakan masukkan URL yang ingin diunduh." });
+
+    try {
+        const result = await padz.snap.download(url);
+        res.json({ status: true, author: "Padz", data: result });
+    } catch (error) {
+        res.status(500).json({ error: "Terjadi kesalahan saat mengunduh." });
+    }
+});
+
 app.get("/api/download/capcut", async (req, res) => {
     const { url } = req.query;
     if (!url)

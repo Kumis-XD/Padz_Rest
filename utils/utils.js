@@ -23,4 +23,5 @@ module.exports = {
 	carbonV1: require("../scrape/Maker/carbonV1"),
 	bratVideo: require("../scrape/Maker/bratVideo"),
 	bratImage: require("../scrape/Maker/bratImage"),
+	snap: require("../scrape/Download/snapsave"),
 };

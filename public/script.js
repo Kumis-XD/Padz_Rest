@@ -187,85 +187,218 @@ function showDetails(api) {
 	document.getElementById("api-input").dataset.api = api;
 }
 
-// Mencoba memanggil API berdasarkan URL yang dimasukkan
-async function tryApi(api) {
-	const responseBox = document.getElementById(api + "-response");
+// Function to save user data to JSON
+function saveUserData(username, password, apiKey) {
+	const userData = { username, password, apiKey };
+	localStorage.setItem("userData", JSON.stringify(userData));
+}
 
-	let endpoint;
-	if (api === 'quotly') {
-		const message = document.getElementById(api + '-message').value;
-		const username = document.getElementById(api + '-username').value;
-		const avatar = document.getElementById(api + '-avatar').value;
-		if (!message && !username && !avatar) {
-			alert("Masukkan pesan, nama pengguna, dan avatar terlebih dahulu!");
-			return;
+// Function to show login modal
+function showLoginModal() {
+	const loginModal = new bootstrap.Modal(document.getElementById("loginModal"));
+	loginModal.show();
+}
+
+// Function to show register modal
+function showRegisterModal() {
+	const registerModal = new bootstrap.Modal(document.getElementById("registerModal"));
+	registerModal.show();
+}
+
+// Function to save user data to JSON file
+async function saveUserDataToFile(username, password, apiKey) {
+	const userData = { username, password, apiKey };
+	try {
+		const response = await fetch("http://localhost:3000/api/saveUserData", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(userData),
+		});
+
+		if (!response.ok) {
+			throw new Error(`Error ${response.status}: ${response.statusText}`);
 		}
-		endpoint = `http://localhost:3000/api/maker/quotly?message=${encodeURIComponent(message)}&username=${encodeURIComponent(username)}&avatar=${encodeURIComponent(avatar)}`;
-	} else if (api === 'emojimix') {
-		const emoji1 = document.getElementById(api + '-emoji1').value;
-		const emoji2 = document.getElementById(api + '-emoji2').value;
-		if (!emoji1 && emoji2) {
-			alert("Masukkan emoji terlebih dahulu!");
-			return;
-		}
-		endpoint = `http://localhost:3000/api/maker/emojimix?emoji1=${encodeURIComponent(emoji1)}&emoji2=${encodeURIComponent(emoji2)}`;
-	} else if (api === 'carbonV1' || api === 'carbonV2') {
-		const input = document.getElementById(api + '-input').value;
-		if (!input) {
-			alert("Masukkan input terlebih dahulu!");
-			return;
-		}
-		endpoint = `http://localhost:3000/api/maker/${api}?input=${encodeURIComponent(input)}`;
-	} else if (api === 'bratImage' || api === 'bratVideo') {
-		const teks = document.getElementById(api + '-teks').value;
-		if (!teks) {
-			alert("Masukkan teks terlebih dahulu!");
-			return;
-		}
-		endpoint = `http://localhost:3000/api/maker/${api}?teks=${encodeURIComponent(teks)}`;
-	} else if (apiData[api].endpoint.includes('/download/')) {
-		const url = document.getElementById(api + "-url").value;
-		if (!url) {
-			alert("Masukkan URL terlebih dahulu!");
-			return;
-		}
-		endpoint = `http://localhost:3000/api/download/${api}?url=${encodeURIComponent(url)}`;
-	} else if (apiData[api].endpoint.includes('/search/')) {
-		const query = document.getElementById(api + "-query").value;
-		if (!query) {
-			alert("Masukkan query terlebih dahulu!");
-			return;
-		}
-		endpoint = apiData[api].endpoint.replace("{QUERY}", encodeURIComponent(query)) + ``;
+	} catch (error) {
+		alert(`Gagal menyimpan data pengguna: ${error.message}`);
+	}
+}
+
+// Function to save API key
+function saveApiKey() {
+	const apiKey = document.getElementById("api-key").value;
+	if (apiKey) {
+		localStorage.setItem("apiKey", apiKey);
+		alert("API Key saved successfully!");
+		const apiKeyModal = bootstrap.Modal.getInstance(document.getElementById("apiKeyModal"));
+		apiKeyModal.hide();
 	} else {
-		alert("API tidak dikenali!");
+		alert("Masukkan API Key!");
+	}
+}
+
+// Function to handle user login
+async function login() {
+    const username = document.getElementById("login-username").value;
+    const password = document.getElementById("login-password").value;
+
+    if (!username || !password) {
+        alert("Masukkan username dan password!");
+        return;
+    }
+
+    try {
+        const response = await fetch("http://localhost:3000/api/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ username, password }), // username and password are sent
+        });
+
+        if (!response.ok) {
+            // Error handling code
+            let errorData;
+            try {
+                errorData = await response.json(); // Extract the error message from the server
+            } catch (e) {
+                errorData = { message: 'Unable to parse error from server.' };
+            }
+            throw new Error(`Error ${response.status}: ${errorData.message}`); // include the server message
+        }
+
+        const data = await response.json();
+        await saveUserDataToFile(username, password, data.apiKey); // Add await here
+        alert(`Login berhasil! API Key: ${data.apiKey}`); // Display the API key
+    } catch (error) {
+        alert(`Gagal login: ${error.message}`); // Show the error message from the server
+    }
+}
+
+// Function to handle user registration
+async function register() {
+	const username = document.getElementById("register-username").value;
+	const password = document.getElementById("register-password").value;
+
+	if (!username || !password) {
+		alert("Masukkan username dan password!");
 		return;
 	}
 
-	// Tampilkan spinner Bootstrap
-	responseBox.innerHTML = `
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-    `;
-
 	try {
-		const response = await fetch(endpoint);
+		const response = await fetch("http://localhost:3000/api/register", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ username, password }),
+		});
+
 		if (!response.ok) {
 			throw new Error(`Error ${response.status}: ${response.statusText}`);
 		}
 
 		const data = await response.json();
-		responseBox.innerHTML = `<pre class="border p-3 bg-light text-dark">${JSON.stringify(
-			data,
-			null,
-			2,
-		)}</pre>`;
+		await saveUserDataToFile(username, password, data.apiKey); // Add await here
+		alert("Registrasi berhasil!");
 	} catch (error) {
-		responseBox.innerHTML = `
+		alert(`Gagal registrasi: ${error.message}`);
+	}
+}
+
+// Mencoba memanggil API berdasarkan URL yang dimasukkan
+async function tryApi(api) {
+    const responseBox = document.getElementById(api + "-response");
+
+    let apiKey;
+    try {
+        const response = await fetch('./user/file.json');
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        const data = await response.json();
+        apiKey = data.apiKey;
+    } catch (error) {
+        alert(`Gagal membaca API Key: ${error.message}`);
+        return;
+    }
+
+    if (!apiKey) {
+        alert("Anda harus login terlebih dahulu!");
+        return;
+    }
+
+    let endpoint;
+    if (api === 'quotly') {
+        const message = document.getElementById(api + '-message').value;
+        const username = document.getElementById(api + '-username').value;
+        const avatar = document.getElementById(api + '-avatar').value;
+        if (!message || !username || !avatar) {
+            alert("Masukkan pesan, nama pengguna, dan avatar terlebih dahulu!");
+            return;
+        }
+        endpoint = `http://localhost:3000/api/maker/quotly?message=${encodeURIComponent(message)}&username=${encodeURIComponent(username)}&avatar=${encodeURIComponent(avatar)}&apiKey=${apiKey}`;
+    } else if (api === 'emojimix') {
+        const emoji1 = document.getElementById(api + '-emoji1').value;
+        const emoji2 = document.getElementById(api + '-emoji2').value;
+        if (!emoji1 || !emoji2) {
+            alert("Masukkan emoji terlebih dahulu!");
+            return;
+        }
+        endpoint = `http://localhost:3000/api/maker/emojimix?emoji1=${encodeURIComponent(emoji1)}&emoji2=${encodeURIComponent(emoji2)}&apiKey=${apiKey}`;
+    } else if (api === 'carbonV1' || api === 'carbonV2') {
+        const input = document.getElementById(api + '-input').value;
+        if (!input) {
+            alert("Masukkan input terlebih dahulu!");
+            return;
+        }
+        endpoint = `http://localhost:3000/api/maker/${api}?input=${encodeURIComponent(input)}&apiKey=${apiKey}`;
+    } else if (api === 'bratImage' || api === 'bratVideo') {
+        const teks = document.getElementById(api + '-teks').value;
+        if (!teks) {
+            alert("Masukkan teks terlebih dahulu!");
+            return;
+        }
+        endpoint = `http://localhost:3000/api/maker/${api}?teks=${encodeURIComponent(teks)}&apiKey=${apiKey}`;
+    } else if (apiData[api].endpoint.includes('/download/')) {
+        const url = document.getElementById(api + "-url").value;
+        if (!url) {
+            alert("Masukkan URL terlebih dahulu!");
+            return;
+        }
+        endpoint = `http://localhost:3000/api/download/${api}?url=${encodeURIComponent(url)}&apiKey=${apiKey}`;
+    } else if (apiData[api].endpoint.includes('/search/')) {
+        const query = document.getElementById(api + "-query").value;
+        if (!query) {
+            alert("Masukkan query terlebih dahulu!");
+            return;
+        }
+        endpoint = apiData[api].endpoint.replace("{QUERY}", encodeURIComponent(query));
+    } else {
+        alert("API tidak dikenali!");
+        return;
+    }
+
+    // Tampilkan spinner Bootstrap
+    responseBox.innerHTML = `
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    `;
+
+    try {
+        const response = await fetch(endpoint);
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        const data = await response.json();
+        responseBox.innerHTML = `<pre class="border p-3 bg-light text-dark">${JSON.stringify(data, null, 2)}</pre>`;
+    } catch (error) {
+        responseBox.innerHTML = `
             <div class="alert alert-danger" role="alert">
                 ❌ Gagal mengambil data: ${error.message}
             </div>
         `;
-	}
+    }
 }

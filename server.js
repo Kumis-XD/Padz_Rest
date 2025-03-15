@@ -2,12 +2,90 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const padz = require("./utils/utils");
+const bodyParser = require("body-parser");
+const fs = require("fs");
 
 const app = express();
 const port = 3000;
 
 app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
+app.use(express.json());
+
+const users = [];
+const apiKeys = new Map();
+
+function generateApiKey() {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
+app.post("/api/register", (req, res) => {
+    const { username, password } = req.body;
+    if (!username || !password) {
+        return res.status(400).json({ message: "Username dan password diperlukan" });
+    }
+
+    const userExists = users.find(user => user.username === username);
+    if (userExists) {
+        return res.status(400).json({ message: "Username sudah digunakan" });
+    }
+
+    const apiKey = generateApiKey();
+    users.push({ username, password, apiKey });
+    apiKeys.set(apiKey, username);
+
+    res.json({ message: "Registrasi berhasil", apiKey });
+});
+
+app.post("/api/login", (req, res) => {
+    const { username, password } = req.body;
+
+    try {
+        const userData = JSON.parse(fs.readFileSync('./public/user/file.json', 'utf8'));
+
+        if (userData.username !== username || userData.password !== password) {
+            return res.status(400).json({ message: "Username atau password salah" });
+        }
+
+        res.json({ message: "Login berhasil", apiKey: userData.apiKey });
+    } catch (error) {
+        console.error('Error reading user data:', error);
+        res.status(500).json({ message: "Terjadi kesalahan saat login" });
+    }
+});
+
+app.post('/api/saveUserData', (req, res) => {
+    try {
+        // Extract the data from the request body
+        const { username, password, apiKey } = req.body;
+
+        // Create a new user data object
+        const userData = { username, password, apiKey };
+
+        // Convert the data to a JSON string
+        const dataToSave = JSON.stringify(userData, null, 2);
+
+        // Write the JSON string to a file (e.g., users.json)
+        // Note: Be careful about where you write this file and how you handle permissions
+        fs.writeFileSync('./public/user/file.json', dataToSave); // This will overwrite the file if it already exists
+
+        // Send a success response back to the client
+        res.status(200).json({ message: 'User data saved successfully' });
+    } catch (error) {
+        // Log the error to the console for debugging
+        console.error('Error saving user data:', error);
+        // Send an appropriate error response to the client
+        res.status(500).json({ error: 'Failed to save user data', details: error.message });
+    }
+});
+
+app.use((req, res, next) => {
+    const apiKey = req.query.apiKey;
+    if (!apiKey || !apiKeys.has(apiKey)) {
+        return res.status(403).json({ message: "API key tidak valid" });
+    }
+    next();
+});
 
 app.get("/api/download/tiktok", async (req, res) => {
     const { url } = req.query;
